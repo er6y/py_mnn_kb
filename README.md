@@ -178,6 +178,13 @@ SKILLS = {
             "prompt": "Query question or keywords",
             "kb_name": "Knowledge base name (optional)"
         }
+    },
+    "kb_status": {
+        "description": "Check knowledge base build status. Returns build progress if building, last build result if idle, or error if build failed. Does not require KB initialization, instant return.",
+        "function": lambda kb_name="default": kb.get_build_status(kb_name),
+        "parameters": {
+            "kb_name": "Knowledge base name (optional)"
+        }
     }
 }
 ```
@@ -213,16 +220,22 @@ You have the following knowledge base tools:
    - Call when user says "add these files to KB", "index this directory"
    - Supported formats: PDF/Word/PPT/Excel/HTML/TXT/JSON
    - Save files to temp directory first, then call this function
+   - Returns immediately, build runs in background
 2. kb_note(text, kb_name, title) - Insert text snippet directly to knowledge base
    - Call when user says "remember this", "save this text", "add note"
    - Also used for webpage summaries, meeting notes, etc.
 3. kb_query(prompt, kb_name) - Retrieve relevant content from knowledge base
    - When user asks questions, call this first to get context, then generate answer
    - Append returned context to your prompt: "Based on: {context}\n\n{question}"
+4. kb_status(kb_name) - Check build progress or last build result
+   - Call to check if build is still running before calling note/query
+   - Returns progress percentage if building, or last build stats if idle
+   - Instant return, no KB initialization needed
 Notes:
 - kb_name defaults to "default", use different names for different projects
 - build is incremental append, won't overwrite existing data
 - query returns raw context, you're responsible for understanding and generating final answer
+- Always check status before note/query if build was recently started
 ```
 ---
 ## config.json Parameters
