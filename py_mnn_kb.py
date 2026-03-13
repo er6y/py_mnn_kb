@@ -2839,6 +2839,35 @@ class KnowledgeBase:
         finally:
             db.close()
 
+    def get_build_status(self, kb_name: str = None) -> dict:
+        """
+        Return current build status. Instant return, no KB init needed.
+        Delegates to module-level _is_build_running() + _read_build_status().
+        Returns dict with keys: status (building|ok|error|idle), progress, message, stats, error.
+        """
+        running = _is_build_running()
+        st = _read_build_status()
+
+        if running:
+            return {
+                "status": "building",
+                "progress": st.get("progress", 0),
+                "message": st.get("message", ""),
+            }
+
+        state = st.get("state", "idle")
+        if state == "ok":
+            return {"status": "ok", "message": st.get("message", "Build complete"), "stats": st.get("stats", {})}
+        elif state == "error":
+            return {"status": "error", "error": st.get("error", "Unknown error")}
+        elif state == "building":
+            # Process died without updating status (crash or SIGKILL)
+            err = "Build process exited unexpectedly (crash or killed)"
+            _write_build_status("error", progress=0, message=err, error=err)
+            return {"status": "error", "error": err}
+        else:
+            return {"status": "idle", "message": "No build has run yet."}
+
 
 # ──────────────────────────────────────────────
 # Module-level convenience functions
