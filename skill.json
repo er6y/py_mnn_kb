@@ -1,0 +1,9 @@
+{
+  "name": "py_mnn_kb",
+  "description": "基于 MNN 本地推理的轻量级知识库检索 Skill",
+  "author": "er6y",
+  "version": "1.0.0",
+  "url": "https://github.com/er6y/py_mnn_kb",
+  "type": "python",
+  "tags": ["kb", "知识库", "mnn", "本地推理", "检索"]
+}
