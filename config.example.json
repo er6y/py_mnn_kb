@@ -2,21 +2,21 @@
     "_comment": "py_mnn_kb configuration - aligns with Android OfflineAI RAG settings",
 
     "embedding": {
-        "_comment": "Path to MNN embedding model directory (absolute or relative to this config file). py_mnn_kb now uses pyMNN only.",
-        "model_dir": "Qwen3-Embedding-0.6B-MNN-int4",
+        "_comment": "Path to MNN embedding model directory (absolute or relative to this config file). Auto-downloaded on first run.",
+        "model_dir": "assets/Qwen3-Embedding-0.6B-MNN-int4",
         "thread_num": 8
     },
 
     "knowledge_base": {
-        "_comment": "Knowledge base storage root (absolute or relative to this config file). DB will be at knowledge_bases/<name>/knowledge_graph.db",
-        "storage_dir": "knowledge_bases",
+        "_comment": "Knowledge base storage root. DB will be at <storage_dir>/<default_name>/knowledge_graph.db",
+        "storage_dir": "assets/knowledge_bases",
         "default_name": "default"
     },
 
     "graph_ner": {
-        "_comment": "Path to custom dictionary (.json) and stopwords file (.json). null or empty = disabled.",
-        "custom_dict_path": "example_terms.json",
-        "stopwords_path": "example_stop.json",
+        "_comment": "Custom dictionary and stopwords improve entity recognition. Set to null to disable.",
+        "custom_dict_path": "assets/example_terms.json",
+        "stopwords_path": "assets/example_stop.json",
         "enabled": true
     },
 
@@ -50,9 +50,9 @@
     },
 
     "llm_api": {
-        "_comment": "LLM API settings for RAG generation in demo. openai-compatible endpoint.",
+        "_comment": "LLM API for RAG generation (query command). Any OpenAI-compatible endpoint works.",
         "base_url": "https://api.deepseek.com/v1",
-        "api_key": "",
+        "api_key": "YOUR_API_KEY_HERE",
         "model": "deepseek-chat",
         "max_tokens": 16384,
         "temperature": 0.7,

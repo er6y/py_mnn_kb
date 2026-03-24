@@ -11,16 +11,20 @@ Local vector knowledge base fully compatible with Android OfflineAI RAG implemen
 ## Directory Structure
 ```
 py_mnn_kb/
-├── py_mnn_kb.py            # Core library + CLI entry (single file)
-├── config.json             # Configuration (paths, RAG params, LLM API)
-├── requirements.txt        # Python dependencies
-├── example_stop.json       # Stopwords list (customizable)
-├── example_terms.json      # Domain terminology examples
-├── README.md
-└── knowledge_bases/        # Knowledge base storage (auto-created)
-    └── <kb_name>/
-        ├── knowledge_graph.db
-        └── metadata.json
+├── scripts/
+│   └── py_mnn_kb.py            # Core library + CLI entry
+├── assets/
+│   ├── knowledge_bases/        # KB storage (auto-created, gitignored)
+│   │   └── <kb_name>/
+│   │       ├── knowledge_graph.db
+│   │       └── metadata.json
+│   ├── Qwen3-Embedding-0.6B-MNN-int4/  # Auto-downloaded on first run
+│   ├── example_stop.json       # Stopwords list (customizable)
+│   └── example_terms.json      # Domain terminology examples
+├── config.json             # Your local config (gitignored — copy from example)
+├── config.example.json     # Config template committed to git
+├── requirements.txt
+└── README.md
 ```
 ---
 ## Quick Start
@@ -31,45 +35,36 @@ pip install -r requirements.txt
 `requirements.txt` packages:
 | Package | Purpose | Required |
 |---|---|---|
-| `MNN>=3.0.0` | MNN Python inference backend (embedding computation) | 
-| `jieba>=0.42.1` | Chinese word segmentation (NER entity extraction) | 
+| `MNN>=3.0.0` | MNN Python inference backend (embedding computation) | Required |
+| `jieba>=0.42.1` | Chinese word segmentation (NER entity extraction) | Required |
+| `psutil>=5.9.0` | Build process monitoring | Required |
 | `openai>=1.0.0` | LLM API client (query command LLM generation) | query+LLM |
 | `pdfplumber` | PDF parsing | Optional |
 | `python-docx` | .docx parsing | Optional |
 | `python-pptx` | .pptx parsing | Optional |
 | `openpyxl` | .xlsx parsing | Optional |
 | `beautifulsoup4` | HTML parsing | Optional |
-### 2. Configure config.json
-```json
-{
-  "embedding": {
-    "model_dir": "Qwen3-Embedding-0.6B-MNN-int4"
-  },
-  "llm_api": {
-    "base_url": "https://api.deepseek.com/v1",
-    "api_key": "YOUR_API_KEY",
-    "model": "deepseek-chat"
-  }
-}
+### 2. Configure
+```bash
+cp config.example.json config.json
+# Edit config.json: set llm_api.api_key (required for query with LLM)
 ```
-- `model_dir`: Embedding model directory, **auto-downloaded from ModelScope on first run**, no manual setup needed
-- `llm_api`: Only required for `query` command, not needed if using `--no-llm`
 ### 3. Run
 ```bash
 # Build knowledge base (auto-downloads model on first run)
-python py_mnn_kb.py build ./my_docs/ --kb myproject
+python scripts/py_mnn_kb.py build ./my_docs/ --kb myproject
 # Add note
-python py_mnn_kb.py note "Meeting decision: ..." --kb myproject
+python scripts/py_mnn_kb.py note "Meeting decision: ..." --kb myproject
 # Query (with LLM answer)
-python py_mnn_kb.py query "What is the deployment process?" --kb myproject
+python scripts/py_mnn_kb.py query "What is the deployment process?" --kb myproject
 # Pure retrieval, no LLM
-python py_mnn_kb.py query "What is the deployment process?" --kb myproject --no-llm
+python scripts/py_mnn_kb.py query "What is the deployment process?" --kb myproject --no-llm
 ```
 ---
 ## CLI Commands
 ### `build` — Build/Append Knowledge Base
 ```
-python py_mnn_kb.py build <dir> [--kb <name>] [--config <path>]
+python scripts/py_mnn_kb.py build <dir> [--kb <name>] [--config <path>]
 ```
 | Parameter | Description |
 |---|---|
@@ -79,13 +74,13 @@ python py_mnn_kb.py build <dir> [--kb <name>] [--config <path>]
 **Supported formats**: `.txt` `.md` `.pdf` `.docx` `.pptx` `.xlsx` `.csv` `.html` `.json` `.jsonl`
 **Examples**:
 ```bash
-python py_mnn_kb.py build ../docs/ --kb company_kb
-python py_mnn_kb.py build /tmp/new_files/ --kb company_kb   # Append, no overwrite
+python scripts/py_mnn_kb.py build ../docs/ --kb company_kb
+python scripts/py_mnn_kb.py build /tmp/new_files/ --kb company_kb   # Append, no overwrite
 ```
 ---
 ### `note` — Add Text Note
 ```
-python py_mnn_kb.py note "<text>" [--kb <name>] [--title <title>]
+python scripts/py_mnn_kb.py note "<text>" [--kb <name>] [--title <title>]
 ```
 | Parameter | Description |
 |---|---|
@@ -94,13 +89,13 @@ python py_mnn_kb.py note "<text>" [--kb <name>] [--title <title>]
 | `--title` | Optional title, written to metadata |
 **Examples**:
 ```bash
-python py_mnn_kb.py note "Q1 2025 roadmap: focus on modules A and B..." --kb company_kb
-python py_mnn_kb.py note "$(cat meeting_notes.txt)" --kb company_kb --title "Weekly meeting"
+python scripts/py_mnn_kb.py note "Q1 2025 roadmap: focus on modules A and B..." --kb company_kb
+python scripts/py_mnn_kb.py note "$(cat meeting_notes.txt)" --kb company_kb --title "Weekly meeting"
 ```
 ---
 ### `query` — RAG Query
 ```
-python py_mnn_kb.py query "<prompt>" [--kb <name>] [--no-llm] [--output json]
+python scripts/py_mnn_kb.py query "<prompt>" [--kb <name>] [--no-llm] [--output json]
 ```
 | Parameter | Description |
 |---|---|
@@ -110,9 +105,9 @@ python py_mnn_kb.py query "<prompt>" [--kb <name>] [--no-llm] [--output json]
 | `--output json` | Output full result in JSON format (for Agent parsing) |
 **Examples**:
 ```bash
-python py_mnn_kb.py query "What are the specs of STAR1200?" --kb company_kb
-python py_mnn_kb.py query "DDR sorting principles" --kb company_kb --no-llm
-python py_mnn_kb.py --output json query "Product roadmap" --kb company_kb
+python scripts/py_mnn_kb.py query "What are the specs of STAR1200?" --kb company_kb
+python scripts/py_mnn_kb.py query "DDR sorting principles" --kb company_kb --no-llm
+python scripts/py_mnn_kb.py --output json query "Product roadmap" --kb company_kb
 ```
 **JSON output format**:
 ```json
@@ -131,8 +126,10 @@ python py_mnn_kb.py --output json query "Product roadmap" --kb company_kb
 ---
 ## Python API (Use as Library)
 ```python
+import sys
+sys.path.insert(0, "scripts")
 from py_mnn_kb import KnowledgeBase
-kb = KnowledgeBase("path/to/config.json")
+kb = KnowledgeBase("config.json")  # config.json is at project root
 # 1. Build knowledge base
 stats = kb.build_kb(files=["doc1.pdf", "manual.docx"], kb_name="myproject")
 # → {'status': 'ok', 'kb_name': 'myproject', 'chunks_added': 86, 'elapsed_sec': 45.2}
